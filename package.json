@@ -13,6 +13,7 @@
     "nodemailer": "^7.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "resend": "^6.9.2",
     "zod": "^4.1.0"
   },
   "devDependencies": {
