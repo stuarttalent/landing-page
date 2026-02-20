@@ -124,12 +124,18 @@ export async function POST(req: Request) {
       subject: "New CWPS Pre-Registration Submission",
       text: textBody,
       html: htmlBody,
-      replyTo: `${data.contactName} <${data.email}>`,
+      // Resend's API expects an email (or array). Keep it simple and valid.
+      replyTo: data.email,
     });
     if (error) {
       console.error(error);
+      const isProd = process.env.NODE_ENV === "production";
       return NextResponse.json(
-        { error: "Server error while sending email. Please try again." },
+        {
+          error: isProd
+            ? "Server error while sending email. Please try again."
+            : `Resend error: ${error.message}`,
+        },
         { status: 500 },
       );
     }
@@ -137,8 +143,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error(err);
+    const message =
+      err instanceof Error ? err.message : "Unknown server error occurred.";
     return NextResponse.json(
-      { error: "Server error while sending email. Please try again." },
+      {
+        error:
+          process.env.NODE_ENV === "production"
+            ? "Server error while sending email. Please try again."
+            : message,
+      },
       { status: 500 },
     );
   }
