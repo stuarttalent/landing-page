@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { z } from "zod";
 
 const FacilityTypeSchema = z.enum([
@@ -65,22 +65,8 @@ export async function POST(req: Request) {
     }
 
     const to = process.env.EMAIL_TO ?? "retread_vigor2f@icloud.com";
-    const from = requiredEnv("EMAIL_FROM");
-
-    const host = requiredEnv("SMTP_HOST");
-    const port = Number(process.env.SMTP_PORT ?? "587");
-    const secure =
-      (process.env.SMTP_SECURE ?? "").toLowerCase() === "true" || port === 465;
-
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: {
-        user: requiredEnv("SMTP_USER"),
-        pass: requiredEnv("SMTP_PASS"),
-      },
-    });
+    const from = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+    const resend = new Resend(requiredEnv("RESEND_API_KEY"));
 
     const submittedAt = new Date().toISOString();
 
@@ -132,7 +118,7 @@ export async function POST(req: Request) {
       </div>
     `.trim();
 
-    await transporter.sendMail({
+    const { error } = await resend.emails.send({
       to,
       from,
       subject: "New CWPS Pre-Registration Submission",
@@ -140,6 +126,13 @@ export async function POST(req: Request) {
       html: htmlBody,
       replyTo: `${data.contactName} <${data.email}>`,
     });
+    if (error) {
+      console.error(error);
+      return NextResponse.json(
+        { error: "Server error while sending email. Please try again." },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

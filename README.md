@@ -16,7 +16,7 @@ npm install
 cp .env.example .env.local
 ```
 
-3) Fill in SMTP/email settings in `.env.local` (see below).
+3) Fill in Resend/email settings in `.env.local` (see below).
 
 4) Run the dev server:
 
@@ -26,18 +26,14 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Email Delivery (SMTP)
+## Email Delivery (Resend)
 
 Form submissions are POSTed to `POST /api/pre-register`, validated server-side, and sent by email.
 
 Set these environment variables (locally in `.env.local`, and in Vercel Project Settings → Environment Variables):
 
-- **SMTP_HOST**: SMTP hostname (e.g. `smtp.yourprovider.com`)
-- **SMTP_PORT**: typically `587` (STARTTLS) or `465` (TLS)
-- **SMTP_SECURE**: `"true"` for port `465`, otherwise `"false"` (optional)
-- **SMTP_USER**: SMTP username
-- **SMTP_PASS**: SMTP password / app password
-- **EMAIL_FROM**: sender address allowed by your SMTP provider (required)
+- **RESEND_API_KEY**: your Resend API key (required)
+- **EMAIL_FROM**: sender address (for now, you can use `onboarding@resend.dev`)
 - **EMAIL_TO**: recipient for submissions (defaults to `retread_vigor2f@icloud.com`)
 
 ## Deploy (Vercel)
