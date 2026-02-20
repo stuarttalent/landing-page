@@ -40,6 +40,38 @@ function escapeHtml(unsafe: string) {
     .replaceAll("'", "&#039;");
 }
 
+function publicSendErrorMessage(input: unknown) {
+  // Keep messages helpful without leaking secrets.
+  if (input instanceof Error) {
+    if (input.message.startsWith("Missing required environment variable: ")) {
+      return input.message;
+    }
+    return "Email service failed. Please try again.";
+  }
+
+  if (typeof input === "object" && input) {
+    const maybe = input as { name?: string; message?: string; statusCode?: number | null };
+    const msg = (maybe.message ?? "").toLowerCase();
+    const status = maybe.statusCode ?? null;
+
+    // Common Resend SDK error shapes:
+    // - { name: 'application_error', statusCode: null, message: 'Unable to fetch data...' }
+    // - { name: 'validation_error', statusCode: 422, message: ... }
+    // - { name: 'authentication_error', statusCode: 401, message: ... }
+    if (msg.includes("unable to fetch") || msg.includes("could not be resolved")) {
+      return "Email service is unreachable from the server. Please try again shortly.";
+    }
+    if (status === 401 || status === 403 || msg.includes("api key")) {
+      return "Email service authorization failed. Check your RESEND_API_KEY and redeploy.";
+    }
+    if (status === 422 || maybe.name === "validation_error") {
+      return "Email service rejected the request (validation). Please review sender/recipient settings.";
+    }
+  }
+
+  return "Server error while sending email. Please try again.";
+}
+
 export async function POST(req: Request) {
   try {
     const json = await req.json().catch(() => null);
@@ -128,13 +160,10 @@ export async function POST(req: Request) {
       replyTo: data.email,
     });
     if (error) {
-      console.error(error);
-      const isProd = process.env.NODE_ENV === "production";
+      console.error("Resend send error", { error });
       return NextResponse.json(
         {
-          error: isProd
-            ? "Server error while sending email. Please try again."
-            : `Resend error: ${error.message}`,
+          error: publicSendErrorMessage(error),
         },
         { status: 500 },
       );
@@ -142,15 +171,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
-    console.error(err);
-    const message =
-      err instanceof Error ? err.message : "Unknown server error occurred.";
+    console.error("Pre-register route error", err);
     return NextResponse.json(
       {
-        error:
-          process.env.NODE_ENV === "production"
-            ? "Server error while sending email. Please try again."
-            : message,
+        error: publicSendErrorMessage(err),
       },
       { status: 500 },
     );
