@@ -1,5 +1,3 @@
-import { SurveyMonkeyEmbed } from "@/components/SurveyMonkeyEmbed";
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-sky-50">
@@ -251,7 +249,19 @@ export default function Home() {
 
             <div className="lg:col-span-7">
               <div className="rounded-3xl border bg-white p-6 shadow-sm sm:p-8">
-                <SurveyMonkeyEmbed />
+                <iframe
+                  title="CWPS Pre-Registration (Google Form)"
+                  src="https://docs.google.com/forms/d/e/1FAIpQLSc7PgA30p65v9uh4Hos6CRaKOceJKkCibQLMTt7um58c0OcJw/viewform?embedded=true"
+                  width="640"
+                  height="2051"
+                  className="h-[2051px] w-full rounded-2xl"
+                  frameBorder={0}
+                  marginHeight={0}
+                  marginWidth={0}
+                  loading="lazy"
+                >
+                  Loading…
+                </iframe>
               </div>
             </div>
           </div>
